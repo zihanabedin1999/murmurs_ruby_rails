@@ -1,0 +1,87 @@
+Your progress looks great so far! Here's a quick **UX/UI functionality review** based on your update:
+
+---
+
+### ✅ Current Features Recap:
+
+* **Login/Register modals open properly** ✅
+* **Validation for required fields** ✅
+* **Simulated login/register (probably no backend yet)** ✅
+
+### 🔍 Test Functionality Checklist:
+
+1. **Modal UX**
+
+   * Can users open and close modals smoothly?
+   * Do modals reset fields on close?
+2. **Form Validation**
+
+   * Do empty fields trigger correct error messages?
+   * Are the error messages clear and placed properly?
+3. **Simulated Auth**
+
+   * Does submitting valid info simulate a login state?
+   * Do buttons/headers change when a user is “logged in”?
+
+If all that is working — you're off to a **solid start**. 🎉
+
+---
+
+## 🚀 Next Suggested Features
+
+### 🔨 1. **Murmur Posting (as planned)**
+
+Let users post a short text (like tweets).
+
+* Input box with character limit (e.g., 280)
+* Submit button to “post”
+* Display list of murmur posts (newest on top)
+
+### 🧠 2. **User State Handling**
+
+Make sure the app behaves differently based on login status:
+
+* Hide login/register if already logged in
+* Show “Welcome, \[username]” or similar
+* Allow logout
+
+### ✨ 3. **Flash Messages / Feedback**
+
+On actions like login, register, or murmur post:
+
+* Show feedback: “Welcome back!” / “Post submitted!”
+* Temporarily display success or error banners
+
+### 🗃️ 4. **Session Persistence (Optional)**
+
+If you're using localStorage:
+
+* Save login state (simulate session)
+* Persist murmurs per user if you want to simulate a basic social feed
+
+### 🧪 5. **Post Validation**
+
+* Prevent empty or duplicate murmur posts
+* Show error if char limit exceeded
+
+---
+
+## ✅ Bonus Feature Ideas (Stretch Goals)
+
+| Feature                    | Why Add It?                 |
+| -------------------------- | --------------------------- |
+| Profile avatars            | More personality to murmurs |
+| Like/upvote button         | Adds interactivity          |
+| Timestamp on murmurs       | Adds realism to feed        |
+| Basic theming (light/dark) | Improves user experience    |
+| Delete or edit murmurs     | More control for users      |
+
+---
+
+Let me know if you'd like help implementing:
+
+* The **murmur posting UI & logic**
+* **Persistent login** using localStorage
+* **Routing** between pages (if you're planning SPA navigation)
+
+I can help sketch out code for any of these.

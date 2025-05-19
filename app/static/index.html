@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Murmur - A Twitter-like Application</title>
+    <!-- Include Tailwind CSS from CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <header class="bg-blue-600 text-white p-4 shadow-md">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <h1 class="text-2xl font-bold">Murmur App</h1>
+                <!-- Search Bar -->
+                <div class="relative">
+                    <input type="text" id="search-input" placeholder="Search users..." 
+                           class="pl-10 pr-4 py-2 bg-blue-700 text-white rounded-full focus:outline-none focus:ring-2 focus:ring-white focus:bg-blue-800"
+                           style="min-width: 200px;">
+                    <div class="absolute left-3 top-2.5 text-white">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                    <div id="search-results" class="absolute left-0 mt-2 w-64 bg-white rounded-md shadow-lg overflow-hidden z-20 hidden">
+                        <!-- Search results will be populated here -->
+                    </div>
+                </div>
+            </div>
+            <nav>
+                <ul class="flex space-x-4 items-center">
+                    <li><a href="#" id="home-btn" class="hover:underline">Home</a></li>
+                    <li><a href="#" id="explore-btn" class="hover:underline">Explore</a></li>
+                    <li><a href="#" id="login-btn" class="hover:underline">Login</a></li>
+                    <li><a href="#" id="register-btn" class="hover:underline">Register</a></li>
+                    <li id="user-nav" class="hidden">
+                        <div class="flex items-center space-x-2">
+                            <a href="#" id="profile-link" class="flex items-center hover:underline">
+                                <div id="nav-avatar" class="w-8 h-8 rounded-full bg-white text-blue-600 flex items-center justify-center font-bold text-sm mr-2">
+                                    U
+                                </div>
+                                <span class="text-sm hidden md:inline">
+                                    <span id="user-profile-name">User</span>
+                                    <span class="text-blue-200">(<span id="user-profile-username">@user</span>)</span>
+                                </span>
+                            </a>
+                            <a href="#" id="logout-btn" class="bg-red-500 hover:bg-red-600 text-white text-sm px-2 py-1 rounded">Logout</a>
+                        </div>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-6">
+        <!-- Flash message container -->
+        <div id="flash-container" class="mb-4"></div>
+        
+        <!-- Main content area - will be populated dynamically -->
+        <div class="grid md:grid-cols-3 gap-6">
+            <!-- Left sidebar -->
+            <div class="md:col-span-1">
+                <!-- User Profile Card -->
+                <div class="bg-white shadow rounded-lg p-6 mb-6">
+                    <div id="profile-card-logged-out" class="text-center py-4">
+                        <p class="text-gray-500 mb-4">Log in to see your profile</p>
+                        <button id="sidebar-login-btn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded font-medium">Login</button>
+                    </div>
+                    
+                    <div id="profile-card-logged-in" class="hidden">
+                        <div class="flex items-center">
+                            <div id="user-avatar" class="w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-bold mr-4 bg-blue-500">
+                                <!-- First letter of name will be shown here -->
+                            </div>
+                            <div>
+                                <h2 id="sidebar-user-name" class="font-bold text-xl">Demo User</h2>
+                                <p id="sidebar-user-username" class="text-gray-600">@demouser</p>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 flex justify-between">
+                            <div>
+                                <span id="sidebar-following-count" class="font-bold">42</span>
+                                <span class="text-gray-600">Following</span>
+                            </div>
+                            <div>
+                                <span id="sidebar-followers-count" class="font-bold">128</span>
+                                <span class="text-gray-600">Followers</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <a href="#" id="view-profile-btn" class="text-blue-600 hover:underline">View full profile</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Trending and suggestions -->
+                <div class="bg-white shadow rounded-lg p-6">
+                    <h3 class="font-bold text-lg mb-4">Who to follow</h3>
+                    <div id="who-to-follow-container" class="space-y-4">
+                        <!-- Will be populated dynamically -->
+                        <div class="text-center text-gray-500">
+                            Login to see suggestions
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Main content area -->
+            <div class="md:col-span-2">
+                <div id="main-content">
+                    <!-- Content will be populated dynamically -->
+                
+                    <!-- Default view: Murmur form and timeline -->
+                    <!-- Murmur form -->
+                    <div class="bg-white shadow rounded-lg p-6 mb-6">
+                        <form id="murmur-form">
+                            <div class="mb-4">
+                                <textarea id="murmur-content" placeholder="What's happening?" class="w-full rounded border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 p-2 border" rows="3" maxlength="280" required></textarea>
+                                <div class="text-right text-gray-500 text-sm mt-1">
+                                    <span id="char-count">0</span>/280
+                                </div>
+                            </div>
+                            <!-- Media Upload Section -->
+                            <div class="mb-4 border-t pt-4">
+                                <label class="block text-gray-700 mb-2">Add Media</label>
+                                <div class="flex space-x-4">
+                                    <div>
+                                        <label for="image-upload" class="cursor-pointer flex flex-col items-center justify-center bg-gray-100 rounded-lg p-2 hover:bg-gray-200">
+                                            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                            </svg>
+                                            <span class="text-sm text-gray-600">Image</span>
+                                        </label>
+                                        <input type="file" id="image-upload" accept="image/*" class="hidden" />
+                                    </div>
+                                    <div>
+                                        <label for="video-upload" class="cursor-pointer flex flex-col items-center justify-center bg-gray-100 rounded-lg p-2 hover:bg-gray-200">
+                                            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                            </svg>
+                                            <span class="text-sm text-gray-600">Video</span>
+                                        </label>
+                                        <input type="file" id="video-upload" accept="video/*" class="hidden" />
+                                    </div>
+                                    <div>
+                                        <label for="audio-upload" class="cursor-pointer flex flex-col items-center justify-center bg-gray-100 rounded-lg p-2 hover:bg-gray-200">
+                                            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                                            </svg>
+                                            <span class="text-sm text-gray-600">Audio</span>
+                                        </label>
+                                        <input type="file" id="audio-upload" accept="audio/*" class="hidden" />
+                                    </div>
+                                </div>
+                                
+                                <!-- Media preview area -->
+                                <div id="media-preview-container" class="mt-4 hidden">
+                                    <div class="relative">
+                                        <div id="image-preview-container" class="hidden">
+                                            <img id="image-preview" class="max-h-60 rounded-lg" alt="Preview" />
+                                        </div>
+                                        <div id="video-preview-container" class="hidden">
+                                            <video id="video-preview" class="max-h-60 rounded-lg" controls></video>
+                                        </div>
+                                        <div id="audio-preview-container" class="hidden">
+                                            <audio id="audio-preview" class="w-full" controls></audio>
+                                        </div>
+                                        <button id="remove-media-btn" type="button" class="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="text-right">
+                                <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded font-medium">Murmur</button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Timeline -->
+                    <div class="bg-white shadow rounded-lg">
+                        <h2 class="font-bold text-xl px-6 py-4 border-b">Timeline</h2>
+                        
+                        <div id="timeline-container" class="divide-y">
+                            <!-- Murmurs will be loaded here dynamically -->
+                            <div class="p-6 text-center text-gray-500">
+                                Loading murmurs...
+                            </div>
+                        </div>
+                        
+                        <div class="px-6 py-4 border-t">
+                            <div class="flex justify-center">
+                                <button id="load-more-btn" class="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300">Load More</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-white py-4 mt-8 border-t">
+        <div class="container mx-auto px-4 text-center text-gray-500">
+            <p>© 2025 Murmur App - A Twitter-like Application</p>
+        </div>
+    </footer>
+
+    <!-- Login Modal -->
+    <div id="login-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg p-8 max-w-md w-full">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">Login</h2>
+                <button class="text-gray-500 hover:text-gray-700 close-modal">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <form id="login-form">
+                <div class="mb-4">
+                    <label for="login-email" class="block text-gray-700 mb-2">Email</label>
+                    <input type="email" id="login-email" class="w-full p-2 border border-gray-300 rounded" required>
+                </div>
+                <div class="mb-6">
+                    <label for="login-password" class="block text-gray-700 mb-2">Password</label>
+                    <input type="password" id="login-password" class="w-full p-2 border border-gray-300 rounded" required>
+                </div>
+                <div class="flex justify-end">
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">Login</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="register-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg p-8 max-w-md w-full">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">Register</h2>
+                <button class="text-gray-500 hover:text-gray-700 close-modal">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <form id="register-form">
+                <div class="mb-4">
+                    <label for="register-name" class="block text-gray-700 mb-2">Name</label>
+                    <input type="text" id="register-name" class="w-full p-2 border border-gray-300 rounded" required>
+                </div>
+                <div class="mb-4">
+                    <label for="register-username" class="block text-gray-700 mb-2">Username</label>
+                    <input type="text" id="register-username" class="w-full p-2 border border-gray-300 rounded" required>
+                </div>
+                <div class="mb-4">
+                    <label for="register-email" class="block text-gray-700 mb-2">Email</label>
+                    <input type="email" id="register-email" class="w-full p-2 border border-gray-300 rounded" required>
+                </div>
+                <div class="mb-6">
+                    <label for="register-password" class="block text-gray-700 mb-2">Password</label>
+                    <input type="password" id="register-password" class="w-full p-2 border border-gray-300 rounded" required>
+                </div>
+                <div class="flex justify-end">
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">Register</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Full Profile Modal -->
+    <div id="profile-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg p-8 max-w-4xl w-full max-h-screen overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">User Profile</h2>
+                <button class="text-gray-500 hover:text-gray-700 close-modal">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Profile Info -->
+                <div class="md:col-span-1">
+                    <div class="bg-white shadow rounded-lg p-6 mb-6">
+                        <div class="flex flex-col items-center">
+                            <div id="modal-user-avatar" class="w-24 h-24 rounded-full flex items-center justify-center text-white text-3xl font-bold mb-4 bg-blue-500">
+                                <!-- First letter of name will be shown here -->
+                            </div>
+                            <div class="text-center">
+                                <h2 id="modal-user-name" class="font-bold text-2xl">Demo User</h2>
+                                <p id="modal-user-username" class="text-gray-600 mb-4">@demouser</p>
+                                <p id="modal-user-bio" class="text-gray-700 mb-6">
+                                    Twitter-like enthusiast and tech lover, sharing thoughts about web development.
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-around mb-6">
+                            <div class="text-center">
+                                <div id="modal-post-count" class="font-bold text-lg">24</div>
+                                <div class="text-gray-600">Posts</div>
+                            </div>
+                            <div class="text-center">
+                                <div id="modal-following-count" class="font-bold text-lg">42</div>
+                                <div class="text-gray-600">Following</div>
+                            </div>
+                            <div class="text-center">
+                                <div id="modal-followers-count" class="font-bold text-lg">128</div>
+                                <div class="text-gray-600">Followers</div>
+                            </div>
+                        </div>
+                        
+                        <div id="follow-actions" class="flex justify-center">
+                            <button id="follow-user-btn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded font-medium w-full hidden">Follow</button>
+                            <button id="unfollow-user-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded font-medium w-full hidden">Unfollow</button>
+                            <button id="edit-profile-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded font-medium w-full hidden">Edit Profile</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Profile Tabs -->
+                <div class="md:col-span-2">
+                    <div class="bg-white shadow rounded-lg overflow-hidden">
+                        <!-- Tab Navigation -->
+                        <div class="flex border-b">
+                            <button id="posts-tab-btn" class="flex-1 py-3 px-4 font-medium text-center border-b-2 border-blue-500">Posts</button>
+                            <button id="following-tab-btn" class="flex-1 py-3 px-4 font-medium text-center text-gray-600 hover:bg-gray-50">Following</button>
+                            <button id="followers-tab-btn" class="flex-1 py-3 px-4 font-medium text-center text-gray-600 hover:bg-gray-50">Followers</button>
+                        </div>
+                        
+                        <!-- Posts Tab Content -->
+                        <div id="posts-tab" class="divide-y">
+                            <div id="profile-posts-container" class="divide-y">
+                                <!-- Will be populated dynamically -->
+                                <div class="p-6 text-center text-gray-500">
+                                    No posts yet
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Following Tab Content -->
+                        <div id="following-tab" class="divide-y hidden">
+                            <div id="following-container" class="divide-y">
+                                <!-- Will be populated dynamically -->
+                                <div class="p-6 text-center text-gray-500">
+                                    Not following anyone yet
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Followers Tab Content -->
+                        <div id="followers-tab" class="divide-y hidden">
+                            <div id="followers-container" class="divide-y">
+                                <!-- Will be populated dynamically -->
+                                <div class="p-6 text-center text-gray-500">
+                                    No followers yet
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Profile Modal -->
+    <div id="edit-profile-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg p-8 max-w-md w-full">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">Edit Profile</h2>
+                <button class="text-gray-500 hover:text-gray-700 close-modal">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <form id="edit-profile-form">
+                <div class="mb-4">
+                    <label for="edit-name" class="block text-gray-700 mb-2">Name</label>
+                    <input type="text" id="edit-name" class="w-full p-2 border border-gray-300 rounded" required>
+                </div>
+                <div class="mb-4">
+                    <label for="edit-username" class="block text-gray-700 mb-2">Username</label>
+                    <input type="text" id="edit-username" class="w-full p-2 border border-gray-300 rounded" required>
+                </div>
+                <div class="mb-4">
+                    <label for="edit-bio" class="block text-gray-700 mb-2">Bio</label>
+                    <textarea id="edit-bio" class="w-full p-2 border border-gray-300 rounded" rows="3"></textarea>
+                </div>
+                <div class="flex justify-end">
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Include main app functionality -->
+    <script src="/main.js"></script>
+    
+    <script>
+        // Modal functionality
+        document.getElementById('login-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('login-modal').classList.remove('hidden');
+        });
+
+        document.getElementById('register-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('register-modal').classList.remove('hidden');
+        });
+
+        // Close modals when clicking the close button
+        document.querySelectorAll('.close-modal').forEach(button => {
+            button.addEventListener('click', function() {
+                document.getElementById('login-modal').classList.add('hidden');
+                document.getElementById('register-modal').classList.add('hidden');
+                document.getElementById('edit-profile-modal').classList.add('hidden');
+                document.getElementById('profile-modal').classList.add('hidden');
+            });
+        });
+
+        // Close modals when clicking outside
+        window.addEventListener('click', function(e) {
+            if (e.target.id === 'login-modal' || e.target.id === 'register-modal' || 
+                e.target.id === 'edit-profile-modal' || e.target.id === 'profile-modal') {
+                e.target.classList.add('hidden');
+            }
+        });
+
+        // User state management
+        let currentUser = localStorage.getItem('currentUser') ? JSON.parse(localStorage.getItem('currentUser')) : null;
+        
+        // Update UI based on user state
+        function updateUI() {
+            const loginBtn = document.getElementById('login-btn');
+            const registerBtn = document.getElementById('register-btn');
+            const userNav = document.getElementById('user-nav');
+            const userProfileName = document.getElementById('user-profile-name');
+            const userProfileUsername = document.getElementById('user-profile-username');
+            
+            // Sidebar profile elements
+            const profileCardLoggedOut = document.getElementById('profile-card-logged-out');
+            const profileCardLoggedIn = document.getElementById('profile-card-logged-in');
+            const userAvatar = document.getElementById('user-avatar');
+            const sidebarUserName = document.getElementById('sidebar-user-name');
+            const sidebarUserUsername = document.getElementById('sidebar-user-username');
+            const sidebarFollowingCount = document.getElementById('sidebar-following-count');
+            const sidebarFollowersCount = document.getElementById('sidebar-followers-count');
+            
+            if (currentUser) {
+                // User is logged in
+                loginBtn.classList.add('hidden');
+                registerBtn.classList.add('hidden');
+                userNav.classList.remove('hidden');
+                userProfileName.textContent = currentUser.name;
+                userProfileUsername.textContent = '@' + currentUser.username;
+                
+                // Update sidebar profile
+                profileCardLoggedOut.classList.add('hidden');
+                profileCardLoggedIn.classList.remove('hidden');
+                
+                // Set avatar with first letter of name
+                userAvatar.textContent = currentUser.name.charAt(0).toUpperCase();
+                
+                // Change avatar background color based on username
+                const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-yellow-500', 'bg-pink-500', 'bg-indigo-500'];
+                const colorIndex = currentUser.username.charCodeAt(0) % colors.length;
+                userAvatar.className = `w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-bold mr-4 ${colors[colorIndex]}`;
+                
+                // Update user info
+                sidebarUserName.textContent = currentUser.name;
+                sidebarUserUsername.textContent = '@' + currentUser.username;
+                
+                // Get following and followers count
+                const following = JSON.parse(localStorage.getItem(`user_${currentUser.email}_following`) || '[]');
+                const followers = JSON.parse(localStorage.getItem(`user_${currentUser.email}_followers`) || '[]');
+                
+                sidebarFollowingCount.textContent = following.length;
+                sidebarFollowersCount.textContent = followers.length;
+            } else {
+                // User is not logged in
+                loginBtn.classList.remove('hidden');
+                registerBtn.classList.remove('hidden');
+                userNav.classList.add('hidden');
+                
+                // Update sidebar profile
+                profileCardLoggedOut.classList.remove('hidden');
+                profileCardLoggedIn.classList.add('hidden');
+            }
+        }
+        
+        // Initialize the UI
+        updateUI();
+        
+        // Form submissions
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            
+            // Simulating login - in a real app this would verify credentials
+            // For demo, we'll check if the email is in localStorage
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const user = users.find(u => u.email === email);
+            
+            if (user && user.password === password) {
+                currentUser = user;
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                showFlashMessage('success', `Welcome back, ${user.name}!`);
+                updateUI();
+                document.getElementById('login-modal').classList.add('hidden');
+                document.getElementById('login-form').reset();
+            } else {
+                showFlashMessage('error', 'Invalid email or password');
+            }
+        });
+
+        document.getElementById('register-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('register-name').value;
+            const username = document.getElementById('register-username').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            
+            // Simulating registration - in a real app this would store in a database
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            
+            // Check if email or username already exists
+            if (users.some(u => u.email === email)) {
+                showFlashMessage('error', 'Email already registered');
+                return;
+            }
+            
+            if (users.some(u => u.username === username)) {
+                showFlashMessage('error', 'Username already taken');
+                return;
+            }
+            
+            // Create new user with bio field
+            const newUser = { 
+                name, 
+                username, 
+                email, 
+                password,
+                bio: `Hi, I'm ${name}! Welcome to my Murmur profile.`,
+                joinedDate: new Date().toISOString()
+            };
+            users.push(newUser);
+            localStorage.setItem('users', JSON.stringify(users));
+            
+            // Initialize empty following and followers lists for new user
+            localStorage.setItem(`user_${email}_following`, JSON.stringify([]));
+            localStorage.setItem(`user_${email}_followers`, JSON.stringify([]));
+            
+            // Log in the newly registered user
+            currentUser = newUser;
+            localStorage.setItem('currentUser', JSON.stringify(newUser));
+            
+            showFlashMessage('success', `Welcome to Murmur, ${name}!`);
+            updateUI();
+            document.getElementById('register-modal').classList.add('hidden');
+            document.getElementById('register-form').reset();
+        });
+        
+        // Logout functionality
+        document.getElementById('logout-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            currentUser = null;
+            localStorage.removeItem('currentUser');
+            showFlashMessage('success', 'You have been logged out');
+            updateUI();
+        });
+        
+        // Profile view functionality
+        document.getElementById('view-profile-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            if (!currentUser) {
+                showFlashMessage('error', 'Please log in to view your profile');
+                return;
+            }
+            
+            // Load current user profile
+            loadProfileData(currentUser);
+            
+            // Show profile modal
+            document.getElementById('profile-modal').classList.remove('hidden');
+        });
+        
+        // Handle sidebar login button
+        document.getElementById('sidebar-login-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('login-modal').classList.remove('hidden');
+        });
+        
+        // Modal close function for profile modals
+        document.querySelectorAll('#profile-modal .close-modal, #edit-profile-modal .close-modal').forEach(button => {
+            button.addEventListener('click', function() {
+                document.getElementById('profile-modal').classList.add('hidden');
+                document.getElementById('edit-profile-modal').classList.add('hidden');
+            });
+        });
+        
+        // Function to load profile data
+        function loadProfileData(user) {
+            // Set profile info
+            const modalUserAvatar = document.getElementById('modal-user-avatar');
+            const modalUserName = document.getElementById('modal-user-name');
+            const modalUserUsername = document.getElementById('modal-user-username');
+            const modalUserBio = document.getElementById('modal-user-bio');
+            const modalPostCount = document.getElementById('modal-post-count');
+            const modalFollowingCount = document.getElementById('modal-following-count');
+            const modalFollowersCount = document.getElementById('modal-followers-count');
+            
+            // Set user info
+            modalUserName.textContent = user.name;
+            modalUserUsername.textContent = '@' + user.username;
+            modalUserBio.textContent = user.bio || 'No bio yet';
+            
+            // Set avatar
+            modalUserAvatar.textContent = user.name.charAt(0).toUpperCase();
+            
+            // Change avatar background color based on username
+            const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-yellow-500', 'bg-pink-500', 'bg-indigo-500'];
+            const colorIndex = user.username.charCodeAt(0) % colors.length;
+            modalUserAvatar.className = `w-24 h-24 rounded-full flex items-center justify-center text-white text-3xl font-bold mb-4 ${colors[colorIndex]}`;
+            
+            // Get post count
+            const murmurs = JSON.parse(localStorage.getItem('murmurs') || '[]');
+            const userPosts = murmurs.filter(m => m.user.id === user.email);
+            modalPostCount.textContent = userPosts.length;
+            
+            // Get following and followers count
+            const following = JSON.parse(localStorage.getItem(`user_${user.email}_following`) || '[]');
+            const followers = JSON.parse(localStorage.getItem(`user_${user.email}_followers`) || '[]');
+            
+            modalFollowingCount.textContent = following.length;
+            modalFollowersCount.textContent = followers.length;
+            
+            // Show the right action buttons
+            const followUserBtn = document.getElementById('follow-user-btn');
+            const unfollowUserBtn = document.getElementById('unfollow-user-btn');
+            const editProfileBtn = document.getElementById('edit-profile-btn');
+            
+            // Hide all buttons first
+            followUserBtn.classList.add('hidden');
+            unfollowUserBtn.classList.add('hidden');
+            editProfileBtn.classList.add('hidden');
+            
+            if (currentUser.email === user.email) {
+                // Show edit button for own profile
+                editProfileBtn.classList.remove('hidden');
+            } else {
+                // Check if current user is following this user
+                const isFollowing = following.includes(user.email);
+                if (isFollowing) {
+                    unfollowUserBtn.classList.remove('hidden');
+                } else {
+                    followUserBtn.classList.remove('hidden');
+                }
+            }
+            
+            // Load user posts
+            loadUserPosts(user);
+            
+            // Load following and followers
+            loadFollowing(user);
+            loadFollowers(user);
+            
+            // Set active tab to posts
+            setActiveTab('posts');
+        }
+        
+        // Function to load user posts
+        function loadUserPosts(user) {
+            const postsContainer = document.getElementById('profile-posts-container');
+            postsContainer.innerHTML = '';
+            
+            const murmurs = JSON.parse(localStorage.getItem('murmurs') || '[]');
+            const userPosts = murmurs.filter(m => m.user.id === user.email);
+            
+            if (userPosts.length === 0) {
+                postsContainer.innerHTML = '<div class="p-6 text-center text-gray-500">No posts yet</div>';
+                return;
+            }
+            
+            // Sort by newest first
+            userPosts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            // Add each post
+            userPosts.forEach(murmur => {
+                const postElement = document.createElement('div');
+                postElement.className = 'p-6';
+                
+                // Format the timestamp
+                const timeAgo = formatTimeAgo(murmur.timestamp);
+                
+                // Create post content HTML
+                let postHTML = `
+                    <div class="flex">
+                        <div class="flex-1">
+                            <div class="flex items-center mb-1">
+                                <h3 class="font-bold">${murmur.user.name}</h3>
+                                <span class="text-gray-500 text-sm ml-2">@${murmur.user.username}</span>
+                                <span class="text-gray-400 text-sm ml-2">• ${timeAgo}</span>
+                            </div>
+                            <p class="mb-2">${murmur.content}</p>
+                `;
+                
+                // Add media if present
+                if (murmur.media && murmur.media.type) {
+                    if (murmur.media.type === 'image') {
+                        postHTML += `
+                            <div class="mb-3 overflow-hidden rounded-lg">
+                                <img src="${murmur.media.data}" alt="Murmur image" class="max-w-full rounded-lg hover:opacity-90 cursor-pointer" onclick="openMediaInLightbox('${murmur.id}')">
+                            </div>
+                        `;
+                    } else if (murmur.media.type === 'video') {
+                        postHTML += `
+                            <div class="mb-3 overflow-hidden rounded-lg">
+                                <video src="${murmur.media.data}" controls class="max-w-full rounded-lg"></video>
+                            </div>
+                        `;
+                    } else if (murmur.media.type === 'audio') {
+                        postHTML += `
+                            <div class="mb-3">
+                                <audio src="${murmur.media.data}" controls class="w-full"></audio>
+                            </div>
+                        `;
+                    }
+                }
+                
+                // Add like button
+                postHTML += `
+                            <div class="flex text-gray-500">
+                                <button class="like-button flex items-center hover:text-red-500" data-murmur-id="${murmur.id}">
+                                    <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                                    </svg>
+                                    <span class="like-count">${murmur.likes}</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                postElement.innerHTML = postHTML;
+                postsContainer.appendChild(postElement);
+                
+                // Add like button event listener
+                const likeButton = postElement.querySelector('.like-button');
+                likeButton.addEventListener('click', function() {
+                    if (!currentUser) {
+                        showFlashMessage('error', 'Please log in to like murmurs');
+                        return;
+                    }
+                    
+                    const murmurId = this.dataset.murmurId;
+                    toggleLike(murmurId, this);
+                });
+            });
+        }
+        
+        // Function to load following users
+        function loadFollowing(user) {
+            const followingContainer = document.getElementById('following-container');
+            followingContainer.innerHTML = '';
+            
+            const following = JSON.parse(localStorage.getItem(`user_${user.email}_following`) || '[]');
+            
+            if (following.length === 0) {
+                followingContainer.innerHTML = '<div class="p-6 text-center text-gray-500">Not following anyone yet</div>';
+                return;
+            }
+            
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            
+            // Add each following user
+            following.forEach(userEmail => {
+                const followedUser = users.find(u => u.email === userEmail);
+                if (!followedUser) return;
+                
+                const userElement = createUserListItem(followedUser);
+                followingContainer.appendChild(userElement);
+            });
+        }
+        
+        // Function to load followers
+        function loadFollowers(user) {
+            const followersContainer = document.getElementById('followers-container');
+            followersContainer.innerHTML = '';
+            
+            const followers = JSON.parse(localStorage.getItem(`user_${user.email}_followers`) || '[]');
+            
+            if (followers.length === 0) {
+                followersContainer.innerHTML = '<div class="p-6 text-center text-gray-500">No followers yet</div>';
+                return;
+            }
+            
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            
+            // Add each follower
+            followers.forEach(userEmail => {
+                const follower = users.find(u => u.email === userEmail);
+                if (!follower) return;
+                
+                const userElement = createUserListItem(follower);
+                followersContainer.appendChild(userElement);
+            });
+        }
+        
+        // Create a user list item element
+        function createUserListItem(user) {
+            const userElement = document.createElement('div');
+            userElement.className = 'p-4 flex items-center justify-between';
+            
+            // Generate avatar color
+            const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-yellow-500', 'bg-pink-500', 'bg-indigo-500'];
+            const colorIndex = user.username.charCodeAt(0) % colors.length;
+            const avatarColor = colors[colorIndex];
+            
+            // Create user HTML
+            userElement.innerHTML = `
+                <div class="flex items-center">
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center text-white text-lg font-bold mr-3 ${avatarColor}">
+                        ${user.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                        <h3 class="font-medium">${user.name}</h3>
+                        <p class="text-gray-500 text-sm">@${user.username}</p>
+                    </div>
+                </div>
+            `;
+            
+            return userElement;
+        }
+        
+        // Function to set active tab
+        function setActiveTab(tabName) {
+            // Hide all tabs
+            document.getElementById('posts-tab').classList.add('hidden');
+            document.getElementById('following-tab').classList.add('hidden');
+            document.getElementById('followers-tab').classList.add('hidden');
+            
+            // Remove active class from all tab buttons
+            document.getElementById('posts-tab-btn').classList.remove('border-b-2', 'border-blue-500');
+            document.getElementById('following-tab-btn').classList.remove('border-b-2', 'border-blue-500');
+            document.getElementById('followers-tab-btn').classList.remove('border-b-2', 'border-blue-500');
+            
+            document.getElementById('posts-tab-btn').classList.add('text-gray-600');
+            document.getElementById('following-tab-btn').classList.add('text-gray-600');
+            document.getElementById('followers-tab-btn').classList.add('text-gray-600');
+            
+            // Show selected tab
+            document.getElementById(`${tabName}-tab`).classList.remove('hidden');
+            
+            // Set active class on selected tab button
+            document.getElementById(`${tabName}-tab-btn`).classList.add('border-b-2', 'border-blue-500');
+            document.getElementById(`${tabName}-tab-btn`).classList.remove('text-gray-600');
+        }
+        
+        // Tab switching
+        document.getElementById('posts-tab-btn').addEventListener('click', function() {
+            setActiveTab('posts');
+        });
+        
+        document.getElementById('following-tab-btn').addEventListener('click', function() {
+            setActiveTab('following');
+        });
+        
+        document.getElementById('followers-tab-btn').addEventListener('click', function() {
+            setActiveTab('followers');
+        });
+        
+        // Edit profile button
+        document.getElementById('edit-profile-btn').addEventListener('click', function() {
+            // Pre-fill form with current user data
+            document.getElementById('edit-name').value = currentUser.name;
+            document.getElementById('edit-username').value = currentUser.username;
+            document.getElementById('edit-bio').value = currentUser.bio || '';
+            
+            // Hide profile modal and show edit profile modal
+            document.getElementById('profile-modal').classList.add('hidden');
+            document.getElementById('edit-profile-modal').classList.remove('hidden');
+        });
+        
+        // Edit profile form submission
+        document.getElementById('edit-profile-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('edit-name').value;
+            const username = document.getElementById('edit-username').value;
+            const bio = document.getElementById('edit-bio').value;
+            
+            // Check if username changed and if it's taken
+            if (username !== currentUser.username) {
+                const users = JSON.parse(localStorage.getItem('users') || '[]');
+                if (users.some(u => u.username === username && u.email !== currentUser.email)) {
+                    showFlashMessage('error', 'Username already taken');
+                    return;
+                }
+            }
+            
+            // Update user data
+            currentUser.name = name;
+            currentUser.username = username;
+            currentUser.bio = bio;
+            
+            // Update users array in localStorage
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const userIndex = users.findIndex(u => u.email === currentUser.email);
+            if (userIndex !== -1) {
+                users[userIndex] = currentUser;
+                localStorage.setItem('users', JSON.stringify(users));
+            }
+            
+            // Update currentUser in localStorage
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            
+            // Show success message
+            showFlashMessage('success', 'Profile updated successfully');
+            
+            // Update UI
+            updateUI();
+            
+            // Hide edit profile modal and refresh profile modal
+            document.getElementById('edit-profile-modal').classList.add('hidden');
+            loadProfileData(currentUser);
+            document.getElementById('profile-modal').classList.remove('hidden');
+        });
+        
+        // Follow user functionality
+        document.getElementById('follow-user-btn').addEventListener('click', function() {
+            if (!currentUser) {
+                showFlashMessage('error', 'Please log in to follow users');
+                return;
+            }
+            
+            // Get the currently viewed user's profile
+            const modalUserUsername = document.getElementById('modal-user-username').textContent;
+            const username = modalUserUsername.substring(1); // Remove @ from username
+            
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const userToFollow = users.find(u => u.username === username);
+            
+            if (!userToFollow) {
+                showFlashMessage('error', 'User not found');
+                return;
+            }
+            
+            // Update current user's following list
+            const following = JSON.parse(localStorage.getItem(`user_${currentUser.email}_following`) || '[]');
+            if (!following.includes(userToFollow.email)) {
+                following.push(userToFollow.email);
+                localStorage.setItem(`user_${currentUser.email}_following`, JSON.stringify(following));
+            }
+            
+            // Update followed user's followers list
+            const followers = JSON.parse(localStorage.getItem(`user_${userToFollow.email}_followers`) || '[]');
+            if (!followers.includes(currentUser.email)) {
+                followers.push(currentUser.email);
+                localStorage.setItem(`user_${userToFollow.email}_followers`, JSON.stringify(followers));
+            }
+            
+            // Show success message
+            showFlashMessage('success', `You are now following ${userToFollow.name}`);
+            
+            // Update profile UI
+            loadProfileData(userToFollow);
+            
+            // Update sidebar UI
+            updateUI();
+        });
+        
+        // Unfollow user functionality
+        document.getElementById('unfollow-user-btn').addEventListener('click', function() {
+            if (!currentUser) {
+                showFlashMessage('error', 'Please log in to unfollow users');
+                return;
+            }
+            
+            // Get the currently viewed user's profile
+            const modalUserUsername = document.getElementById('modal-user-username').textContent;
+            const username = modalUserUsername.substring(1); // Remove @ from username
+            
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const userToUnfollow = users.find(u => u.username === username);
+            
+            if (!userToUnfollow) {
+                showFlashMessage('error', 'User not found');
+                return;
+            }
+            
+            // Update current user's following list
+            const following = JSON.parse(localStorage.getItem(`user_${currentUser.email}_following`) || '[]');
+            const followingIndex = following.indexOf(userToUnfollow.email);
+            if (followingIndex !== -1) {
+                following.splice(followingIndex, 1);
+                localStorage.setItem(`user_${currentUser.email}_following`, JSON.stringify(following));
+            }
+            
+            // Update unfollowed user's followers list
+            const followers = JSON.parse(localStorage.getItem(`user_${userToUnfollow.email}_followers`) || '[]');
+            const followerIndex = followers.indexOf(currentUser.email);
+            if (followerIndex !== -1) {
+                followers.splice(followerIndex, 1);
+                localStorage.setItem(`user_${userToUnfollow.email}_followers`, JSON.stringify(followers));
+            }
+            
+            // Show success message
+            showFlashMessage('success', `You unfollowed ${userToUnfollow.name}`);
+            
+            // Update profile UI
+            loadProfileData(userToUnfollow);
+            
+            // Update sidebar UI
+            updateUI();
+        });
+        
+        // Flash message functionality
+        function showFlashMessage(type, message) {
+            const flashContainer = document.getElementById('flash-container');
+            const flashMessage = document.createElement('div');
+            
+            if (type === 'success') {
+                flashMessage.className = 'bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4';
+            } else {
+                flashMessage.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4';
+            }
+            
+            flashMessage.textContent = message;
+            flashContainer.appendChild(flashMessage);
+            
+            // Automatically remove the message after 3 seconds
+            setTimeout(() => {
+                flashMessage.remove();
+            }, 3000);
+        }
+        
+        // Character counter for murmur textarea
+        document.getElementById('murmur-content').addEventListener('input', function() {
+            const count = this.value.length;
+            const charCount = document.getElementById('char-count');
+            charCount.textContent = count;
+            
+            // Change color based on character count
+            if (count > 240) {
+                charCount.classList.add('text-red-500');
+                charCount.classList.remove('text-yellow-500');
+            } else if (count > 200) {
+                charCount.classList.add('text-yellow-500');
+                charCount.classList.remove('text-red-500');
+            } else {
+                charCount.classList.remove('text-yellow-500', 'text-red-500');
+            }
+        });
+        
+        // Media upload handling
+        // Variables to store media data
+        let currentMedia = {
+            type: null, // 'image', 'video', or 'audio'
+            data: null // Base64 data
+        };
+        
+        // Function to handle file selection
+        function handleFileSelect(event, mediaType) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            // Check file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                showFlashMessage('error', 'File is too large. Maximum size is 5MB.');
+                event.target.value = '';
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                // Store media data
+                currentMedia = {
+                    type: mediaType,
+                    data: e.target.result
+                };
+                
+                // Show preview
+                showMediaPreview(mediaType, e.target.result);
+            };
+            
+            reader.onerror = function() {
+                showFlashMessage('error', 'Error reading file');
+                event.target.value = '';
+            };
+            
+            reader.readAsDataURL(file);
+        }
+        
+        // Function to show media preview
+        function showMediaPreview(mediaType, data) {
+            const previewContainer = document.getElementById('media-preview-container');
+            const imagePreviewContainer = document.getElementById('image-preview-container');
+            const videoPreviewContainer = document.getElementById('video-preview-container');
+            const audioPreviewContainer = document.getElementById('audio-preview-container');
+            
+            // Hide all preview containers first
+            imagePreviewContainer.classList.add('hidden');
+            videoPreviewContainer.classList.add('hidden');
+            audioPreviewContainer.classList.add('hidden');
+            
+            // Show the appropriate preview based on media type
+            if (mediaType === 'image') {
+                document.getElementById('image-preview').src = data;
+                imagePreviewContainer.classList.remove('hidden');
+            } else if (mediaType === 'video') {
+                document.getElementById('video-preview').src = data;
+                videoPreviewContainer.classList.remove('hidden');
+            } else if (mediaType === 'audio') {
+                document.getElementById('audio-preview').src = data;
+                audioPreviewContainer.classList.remove('hidden');
+            }
+            
+            // Show the main preview container
+            previewContainer.classList.remove('hidden');
+        }
+        
+        // Add event listeners for file inputs
+        document.getElementById('image-upload').addEventListener('change', function(e) {
+            handleFileSelect(e, 'image');
+        });
+        
+        document.getElementById('video-upload').addEventListener('change', function(e) {
+            handleFileSelect(e, 'video');
+        });
+        
+        document.getElementById('audio-upload').addEventListener('change', function(e) {
+            handleFileSelect(e, 'audio');
+        });
+        
+        // Remove media button
+        document.getElementById('remove-media-btn').addEventListener('click', function() {
+            // Reset input fields
+            document.getElementById('image-upload').value = '';
+            document.getElementById('video-upload').value = '';
+            document.getElementById('audio-upload').value = '';
+            
+            // Clear media data
+            currentMedia = {
+                type: null,
+                data: null
+            };
+            
+            // Hide preview
+            document.getElementById('media-preview-container').classList.add('hidden');
+        });
+        
+        // Function to format date/time in a user-friendly way
+        function formatTimeAgo(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const seconds = Math.floor((now - date) / 1000);
+            
+            let interval = Math.floor(seconds / 31536000);
+            if (interval >= 1) {
+                return interval + "y ago";
+            }
+            
+            interval = Math.floor(seconds / 2592000);
+            if (interval >= 1) {
+                return interval + "mo ago";
+            }
+            
+            interval = Math.floor(seconds / 86400);
+            if (interval >= 1) {
+                return interval + "d ago";
+            }
+            
+            interval = Math.floor(seconds / 3600);
+            if (interval >= 1) {
+                return interval + "h ago";
+            }
+            
+            interval = Math.floor(seconds / 60);
+            if (interval >= 1) {
+                return interval + "m ago";
+            }
+            
+            return Math.floor(seconds) + "s ago";
+        }
+        
+        // Function to create and add a murmur to the timeline
+        function addMurmurToTimeline(murmur) {
+            const timelineContainer = document.getElementById('timeline-container');
+            
+            // Create murmur element
+            const murmurElement = document.createElement('div');
+            murmurElement.className = 'p-6';
+            murmurElement.dataset.murmurId = murmur.id;
+            
+            // Generate a random color for avatar background based on username
+            const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-yellow-500', 'bg-pink-500', 'bg-indigo-500'];
+            const colorIndex = murmur.user.username.charCodeAt(0) % colors.length;
+            const avatarColor = colors[colorIndex];
+            
+            // Format the timestamp
+            const timeAgo = formatTimeAgo(murmur.timestamp);
+            
+            // Set the HTML content - starting with basic user info
+            let murmurHtml = `
+                <div class="flex">
+                    <div class="w-12 h-12 rounded-full flex items-center justify-center text-white ${avatarColor} mr-4 flex-shrink-0">
+                        ${murmur.user.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center mb-1">
+                            <h3 class="font-bold">${murmur.user.name}</h3>
+                            <span class="text-gray-500 text-sm ml-2">@${murmur.user.username}</span>
+                            <span class="text-gray-400 text-sm ml-2">• ${timeAgo}</span>
+                        </div>
+                        <p class="mb-2">${murmur.content}</p>`;
+            
+            // Add media content if present
+            if (murmur.media && murmur.media.type) {
+                if (murmur.media.type === 'image') {
+                    murmurHtml += `
+                        <div class="mb-3 overflow-hidden rounded-lg">
+                            <img src="${murmur.media.data}" alt="Murmur image" class="max-w-full rounded-lg hover:opacity-90 cursor-pointer" onclick="openMediaInLightbox('${murmur.id}')">
+                        </div>`;
+                } else if (murmur.media.type === 'video') {
+                    murmurHtml += `
+                        <div class="mb-3 overflow-hidden rounded-lg">
+                            <video src="${murmur.media.data}" controls class="max-w-full rounded-lg"></video>
+                        </div>`;
+                } else if (murmur.media.type === 'audio') {
+                    murmurHtml += `
+                        <div class="mb-3">
+                            <audio src="${murmur.media.data}" controls class="w-full"></audio>
+                        </div>`;
+                }
+            }
+            
+            // Add like button
+            murmurHtml += `
+                        <div class="flex text-gray-500">
+                            <button class="like-button flex items-center hover:text-red-500" data-murmur-id="${murmur.id}">
+                                <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                                </svg>
+                                <span class="like-count">${murmur.likes}</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Set the HTML content
+            murmurElement.innerHTML = murmurHtml;
+            
+            // Add to the beginning of the timeline
+            if (timelineContainer.firstChild) {
+                timelineContainer.insertBefore(murmurElement, timelineContainer.firstChild);
+            } else {
+                timelineContainer.appendChild(murmurElement);
+            }
+            
+            // Add event listener for like button
+            const likeButton = murmurElement.querySelector('.like-button');
+            likeButton.addEventListener('click', function() {
+                if (!currentUser) {
+                    showFlashMessage('error', 'Please log in to like murmurs');
+                    return;
+                }
+                
+                const murmurId = this.dataset.murmurId;
+                toggleLike(murmurId, this);
+            });
+        }
+        
+        // Function to toggle like on a murmur
+        function toggleLike(murmurId, likeButton) {
+            const murmurs = JSON.parse(localStorage.getItem('murmurs') || '[]');
+            const murmurIndex = murmurs.findIndex(m => m.id == murmurId);
+            
+            if (murmurIndex !== -1) {
+                // Check if user already liked this murmur
+                const likedMurmurs = JSON.parse(localStorage.getItem(`user_${currentUser.email}_likes`) || '[]');
+                const alreadyLiked = likedMurmurs.includes(Number(murmurId));
+                
+                if (alreadyLiked) {
+                    // Unlike
+                    murmurs[murmurIndex].likes--;
+                    likedMurmurs.splice(likedMurmurs.indexOf(Number(murmurId)), 1);
+                    likeButton.classList.remove('text-red-500');
+                } else {
+                    // Like
+                    murmurs[murmurIndex].likes++;
+                    likedMurmurs.push(Number(murmurId));
+                    likeButton.classList.add('text-red-500');
+                }
+                
+                // Update UI
+                const likeCount = likeButton.querySelector('.like-count');
+                likeCount.textContent = murmurs[murmurIndex].likes;
+                
+                // Save to localStorage
+                localStorage.setItem('murmurs', JSON.stringify(murmurs));
+                localStorage.setItem(`user_${currentUser.email}_likes`, JSON.stringify(likedMurmurs));
+            }
+        }
+        
+        // Load all murmurs on page load
+        function loadMurmurs() {
+            const murmurs = JSON.parse(localStorage.getItem('murmurs') || '[]');
+            const timelineContainer = document.getElementById('timeline-container');
+            
+            // Clear existing murmurs
+            timelineContainer.innerHTML = '';
+            
+            if (murmurs.length === 0) {
+                const emptyMessage = document.createElement('div');
+                emptyMessage.className = 'p-6 text-center text-gray-500';
+                emptyMessage.textContent = 'No murmurs yet. Be the first to post!';
+                timelineContainer.appendChild(emptyMessage);
+            } else {
+                // Add each murmur to the timeline
+                murmurs.forEach(murmur => {
+                    addMurmurToTimeline(murmur);
+                });
+                
+                // Update like button state for logged in user
+                if (currentUser) {
+                    const likedMurmurs = JSON.parse(localStorage.getItem(`user_${currentUser.email}_likes`) || '[]');
+                    likedMurmurs.forEach(murmurId => {
+                        const likeButton = document.querySelector(`.like-button[data-murmur-id="${murmurId}"]`);
+                        if (likeButton) {
+                            likeButton.classList.add('text-red-500');
+                        }
+                    });
+                }
+            }
+        }
+        
+        // Initialize timeline
+        loadMurmurs();
+        
+        // Media lightbox function
+        function openMediaInLightbox(murmurId) {
+            const murmurs = JSON.parse(localStorage.getItem('murmurs') || '[]');
+            const murmur = murmurs.find(m => m.id == murmurId);
+            
+            if (murmur && murmur.media && murmur.media.type === 'image') {
+                // Create lightbox
+                const lightbox = document.createElement('div');
+                lightbox.className = 'fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50';
+                lightbox.id = 'media-lightbox';
+                
+                // Create image element
+                const img = document.createElement('img');
+                img.src = murmur.media.data;
+                img.className = 'max-h-screen max-w-screen-lg p-4';
+                
+                // Create close button
+                const closeBtn = document.createElement('button');
+                closeBtn.className = 'absolute top-4 right-4 text-white text-2xl';
+                closeBtn.innerHTML = '×';
+                closeBtn.onclick = function() {
+                    document.body.removeChild(lightbox);
+                };
+                
+                // Add everything to lightbox
+                lightbox.appendChild(img);
+                lightbox.appendChild(closeBtn);
+                
+                // Add click handler to close on background click
+                lightbox.addEventListener('click', function(e) {
+                    if (e.target === lightbox) {
+                        document.body.removeChild(lightbox);
+                    }
+                });
+                
+                // Add to body
+                document.body.appendChild(lightbox);
+            }
+        }
+        
+        // Murmur posting functionality
+        document.getElementById('murmur-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!currentUser) {
+                showFlashMessage('error', 'Please log in to post a murmur');
+                return;
+            }
+            
+            const murmurContent = document.getElementById('murmur-content').value;
+            
+            // Validate murmur content - allow empty content only if media is attached
+            if (!murmurContent.trim() && (!currentMedia.type || !currentMedia.data)) {
+                showFlashMessage('error', 'Please enter some text or add media');
+                return;
+            }
+            
+            if (murmurContent.length > 280) {
+                showFlashMessage('error', 'Murmur cannot exceed 280 characters');
+                return;
+            }
+            
+            // Create new murmur
+            const murmur = {
+                id: Date.now(),
+                user: {
+                    id: currentUser.email,
+                    name: currentUser.name,
+                    username: currentUser.username
+                },
+                content: murmurContent,
+                timestamp: new Date().toISOString(),
+                likes: 0
+            };
+            
+            // Add media if present
+            if (currentMedia.type && currentMedia.data) {
+                murmur.media = {
+                    type: currentMedia.type,
+                    data: currentMedia.data
+                };
+            }
+            
+            // Save to localStorage
+            const murmurs = JSON.parse(localStorage.getItem('murmurs') || '[]');
+            murmurs.unshift(murmur); // Add to beginning of array
+            localStorage.setItem('murmurs', JSON.stringify(murmurs));
+            
+            // Add murmur to timeline
+            addMurmurToTimeline(murmur);
+            
+            // Reset form and media
+            document.getElementById('murmur-form').reset();
+            document.getElementById('char-count').textContent = '0';
+            document.getElementById('char-count').classList.remove('text-yellow-500', 'text-red-500');
+            
+            // Reset media
+            currentMedia = { type: null, data: null };
+            document.getElementById('media-preview-container').classList.add('hidden');
+            
+            showFlashMessage('success', 'Murmur posted successfully!');
+        });
+    </script>
+</body>
+</html>

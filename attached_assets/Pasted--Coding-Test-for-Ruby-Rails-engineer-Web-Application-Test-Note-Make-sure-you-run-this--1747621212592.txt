@@ -1,0 +1,105 @@
+# Coding Test for Ruby/Rails engineer
+
+# Web Application Test
+
+# Note
+
+Make sure you run this application with the following tech stack.
+
+- Ruby 3.x or later
+- Ruby on Rails 4.x or later
+- MySQL
+- Webpack
+- Tailwind
+
+## Theme
+
+Please implement a web application which is able to show murmur(=tweet) by user. (This application is similar to Twitter/X)
+
+## Specifications
+
+- The user can follow other users.
+- By following, a list of murmurs posted by other users is displayed in the timeline.
+- The user can post murmurs as many times as he wants.
+- Only the user who posted can delete his murmur.
+- The user can add LIKE to another person's murmur.
+- [optional] User authentication.
+
+### DB
+
+There are two sample tables in this application.
+Please consider and add columns to below tables.
+Furthermore, I think you need more tables, so it's possible to add new tables depending on the specification below.
+
+e.g.
+
+- murmurs
+- users
+
+### Server
+
+Please implement the REST API. There are three sample endpoints below.
+I think you need more endpoints, so you add more endpoints as needed.
+
+e.g.
+
+- `[GET] /api/murmurs/`
+- `[POST] /api/me/murmurs/`
+- `[DELETE] /api/me/murmurs/:id/`
+
+### Client
+
+Please implement the below function.
+If you want to add a new function after complete to implement below function, it's possible to add and we evaluate your original function.
+
+- Timeline
+    - List of Murmur information (e.g. text, LIKE count)
+    - LIKE button each murmur.
+    - Show 10 murmurs per page. (need to implement pagination)
+- Murmur Detail
+    - Murmur Information (e.g. text, LIKE count)
+- Own User Detail
+    - User information (e.g. name, followCount, followedCount)
+    - List of own murmurs
+    - Button for delete a murmur
+- Other User Detail
+    - User information (e.g. name, followCount, followedCount)
+    - List of the user's murmurs
+
+### Point
+
+- You can proceed with the implementation freely.
+- Of course, you can also search the Web or refer to the books you have.
+- The deadline is 5 days after the assignment is handed over. The date and time will be announced separately.
+- Please aim to implement all the features in client and backend. CSS is not evaluated, so the minimum design style is fine.
+- You can ask any questions about the content. 
+If you have any questions, please send an email to (keita.ojima@venturas-bd.com) (salvana.ahmed@venturas-bd.com) , (uedayoriko@venturas-bd.com). 
+(sohana.shomi@venturas-bd.com). (rahat.redwanul@venturas-bd.com)
+
+Please note that we do not guarantee an immediate reply.
+
+## How to proceed with development
+
+1. Create a repository for your private GitHub account and push the project files to the main branch.
+2. Give the administrator privileges of the repository to the following Github ids:
+    - ojimac
+3. Create a `develop` branch from main.
+4. Create the feature branch for your develop branch, submit a pull request as appropriate, and merge it into your develop branch.
+5. When development is complete, create a pull request from develop to main.
+   In the pull request overview, include the following:
+   - Appeal Points
+   - Implemented Features
+   - Unimplemented Features
+   - Impressions
+
+### Submission
+
+After submitting the final pull request, please notify us by email.  
+Include the link to the pull request in your message.  
+Send your email to all of the following addresses:
+
+- keita.ojima@venturas-bd.com  
+- salvana.ahmed@venturas-bd.com  
+- uedayoriko@venturas-bd.com  
+- sohana.shomi@venturas-bd.com  
+- rahat.redwanul@venturas-bd.com

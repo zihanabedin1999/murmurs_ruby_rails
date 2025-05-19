@@ -1,0 +1,82 @@
+<div class="grid md:grid-cols-3 gap-6">
+  <!-- User profile -->
+  <div class="md:col-span-1">
+    <div class="bg-white shadow rounded-lg p-6">
+      <div class="flex items-center">
+        <img src="<%= @user.avatar_url %>" alt="<%= @user.name %>" class="w-16 h-16 rounded-full object-cover mr-4">
+        <div>
+          <h1 class="font-bold text-xl"><%= @user.name %></h1>
+          <p class="text-gray-600">@<%= @user.username %></p>
+        </div>
+      </div>
+      
+      <% if @user.bio.present? %>
+        <div class="mt-4">
+          <p><%= @user.bio %></p>
+        </div>
+      <% end %>
+      
+      <div class="mt-4 flex justify-between">
+        <div>
+          <span class="font-bold"><%= @user.following.count %></span>
+          <span class="text-gray-600">Following</span>
+        </div>
+        <div>
+          <span class="font-bold"><%= @user.followers.count %></span>
+          <span class="text-gray-600">Followers</span>
+        </div>
+      </div>
+      
+      <% unless @user.id == current_user.id %>
+        <div class="mt-4" data-controller="follow">
+          <% if current_user.following?(@user) %>
+            <button 
+              data-follow-target="button" 
+              data-user-id="<%= @user.id %>"
+              data-action="click->follow#unfollow"
+              class="w-full bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded font-medium"
+            >
+              Unfollow
+            </button>
+          <% else %>
+            <button 
+              data-follow-target="button" 
+              data-user-id="<%= @user.id %>"
+              data-action="click->follow#follow"
+              class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded font-medium"
+            >
+              Follow
+            </button>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+  
+  <!-- User murmurs -->
+  <div class="md:col-span-2">
+    <div class="bg-white shadow rounded-lg">
+      <h2 class="font-bold text-xl px-6 py-4 border-b">
+        <% if @user.id == current_user.id %>
+          Your Murmurs
+        <% else %>
+          Murmurs by <%= @user.name %>
+        <% end %>
+      </h2>
+      
+      <% if @murmurs.empty? %>
+        <div class="p-6 text-center text-gray-500">
+          No murmurs yet.
+        </div>
+      <% else %>
+        <div class="divide-y">
+          <%= render partial: 'users/murmurs', locals: { murmurs: @murmurs, user: @user } %>
+        </div>
+        
+        <div class="px-6 py-4 border-t">
+          <%= paginate @murmurs %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
