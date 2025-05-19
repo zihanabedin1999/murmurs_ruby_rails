@@ -1,0 +1,16 @@
+## Appeal Points
+- Optimized API performance using eager loading
+- Modular controller and serializer structure
+
+## Implemented Features
+- Posting, deleting, and liking murmurs
+- Following/unfollowing users
+- Timeline pagination
+- User profile views
+
+## Unimplemented Features
+- Real-time updates via ActionCable
+- Password recovery system
+
+## Impressions
+- The project helped improve my confidence with REST APIs, pagination, and component reuse.
